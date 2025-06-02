@@ -1,16 +1,16 @@
-name: Deploy Vite App to GitHub Pages
+name: Build and Push to gh-pages Branch
 
 on:
   push:
     branches:
-      - main  # or 'master' if you're using that
+      - main  # Change to your source branch name if different
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout source
         uses: actions/checkout@v3
 
       - name: Set up Node.js
@@ -24,13 +24,11 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Setup Git
+      - name: Push dist to gh-pages branch
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan gh-pages
+          git --work-tree dist add --all
+          git --work-tree dist commit -m "Deploy to gh-pages"
+          git push origin HEAD:gh-pages --force
