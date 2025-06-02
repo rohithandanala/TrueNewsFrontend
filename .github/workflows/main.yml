@@ -33,4 +33,3 @@ jobs:
           git --work-tree dist add --all
           git --work-tree dist commit -m "Deploy to gh-pages"
           git push origin HEAD:gh-pages --force
-
