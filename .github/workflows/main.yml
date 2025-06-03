@@ -1,35 +1,38 @@
-name: Build and Push to gh-pages Branch
+name: GitHub Pages
 
 on:
   push:
     branches:
-      - main
+      - main  # Set a branch name to trigger deployment
+  pull_request:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
         with:
-          node-version: 18
+          submodules: true  # Fetch Hugo themes (true OR recursive)
+          fetch-depth: 0    # Fetch all history for .GitInfo and .Lastmod
 
-      - name: Install dependencies
-        run: npm install
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.110.0'
 
-      - name: Build project
-        run: npm run build
+      - name: Build
+        run: hugo --minify
 
-      - name: Push dist to gh-pages branch
-        run: |
-          git config user.name "rohithandanala"
-          git config user.email "rohith@example.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git
-          git checkout --orphan gh-pages
-          git --work-tree dist add --all
-          git --work-tree dist commit -m "Deploy to gh-pages"
-          git push origin HEAD:gh-pages --force
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        # If you're changing the branch from main,
+        # also change the `main` in `refs/heads/main`
+        # below accordingly.
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GH_PAT }}
+          publish_dir: ./public
